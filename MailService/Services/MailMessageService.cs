@@ -13,6 +13,7 @@ namespace MailService.Services
         private MailManagerDBConnection dataContext = new MailManagerDBConnection();
 
         private FileService fileService = new FileService();
+        private MailAttachmentService mailAttachmentService = new MailAttachmentService();
 
         public MailMessageService()
         {
@@ -49,7 +50,7 @@ namespace MailService.Services
 
         public List<dtoMailMessage> GetTrashMails(string eMailId)
         {
-            var sentmails = dataContext.Mails.Where(x => x.FromEmail == eMailId && x.EmailStatus == "SENT" && x.MailFolder == "TRASH").ToList();
+            var sentmails = dataContext.Mails.Where(x => x.FromEmail == eMailId && (x.EmailStatus == "SENT" || x.EmailStatus == "DRAFT") && x.MailFolder == "TRASH").ToList();
 
             var inboxmails = dataContext.Mails.Where(x => x.ToEmail == eMailId && x.EmailStatus == "RECEIVED" && x.MailFolder == "TRASH").ToList();
 
@@ -85,7 +86,7 @@ namespace MailService.Services
                 Mail mailMessage = new Mail();
                 bool senderMailUpdateStatus = false;
 
-                eMail.MailId = validateMailForDraft(eMail);
+                eMail = validateMailForDraft(eMail);
 
                 var emailsToSend = eMail.ToEmail.Split(',');
 
@@ -97,7 +98,7 @@ namespace MailService.Services
                     PrepareReceiverMailData(mailMessage, toEmail);
 
                     MailStatus mailStatus = new MailStatus();
-                    mailStatus.EmailId = toEmail;
+                    mailStatus.EmailId = toEmail.Trim();
                     mailStatus.IsSentSuccessful = false;
                     using (DbContextTransaction transaction = dataContext.Database.BeginTransaction())
                     {
@@ -155,7 +156,7 @@ namespace MailService.Services
 
         }
 
-        public Int32 SaveDraft(dtoMailMessage eMail)
+        public Int32 SaveDraftOld(dtoMailMessage eMail)
         {
             try
             {
@@ -167,20 +168,71 @@ namespace MailService.Services
                     dataContext.Mails.Add(mail);
                     int retValue = dataContext.SaveChanges();
                     dataContext = new MailManagerDBConnection();
-                    
-                    return mail.MailId;
                 }
                 else
                 {
                     dataContext.Entry(mail).State = EntityState.Modified;
                     Int32 retval = dataContext.SaveChanges();
                     dataContext = new MailManagerDBConnection();
-                    return mail.MailId;
                 }
+
+                return mail.MailId;
             }
             catch (Exception ex)
             {
                 throw ex;
+            }
+
+        }
+
+        public dtoMailMessage SaveDraft(dtoMailMessage eMail)
+        {
+            using (DbContextTransaction transaction = dataContext.Database.BeginTransaction())
+            {
+                try
+                {
+                    Mail mail = Mapper.Map<Mail>(eMail);
+                    PrepareDraftMailData(mail);
+
+                    if (eMail.MailId == 0)
+                    {
+                        dataContext.Mails.Add(mail);
+                        int retValue = dataContext.SaveChanges();
+                        eMail.MailId = mail.MailId;
+                        if (eMail.AttachmentsList.Count > 0 && eMail.AttachmentsList[0].MailId != mail.MailId)
+                        {
+                            var sourceMailId = Convert.ToInt32(eMail.AttachmentsList[0].MailId);
+
+                            for (Int32 i = 0; i < eMail.AttachmentsList.Count; i++)
+                            {
+                                eMail.AttachmentsList[i].AttachmentId = 0;
+                                eMail.AttachmentsList[i].MailId = mail.MailId;
+
+                                MailAttachment attch = Mapper.Map<MailAttachment>(eMail.AttachmentsList[i]);
+                                dataContext.MailAttachments.Add(attch);
+                                dataContext.SaveChanges();
+
+                                eMail.AttachmentsList[i].AttachmentId = attch.AttachmentId;
+                            }
+
+                            fileService.CopyFiles(sourceMailId, mail.MailId);
+                        }
+                    }
+                    else
+                    {
+                        dataContext.Entry(mail).State = EntityState.Modified;
+                        Int32 retval = dataContext.SaveChanges();
+                    }
+
+                    transaction.Commit();
+                    return eMail;
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    dataContext = new MailManagerDBConnection();
+                    throw ex;
+                }
             }
 
         }
@@ -287,12 +339,26 @@ namespace MailService.Services
         }
 
 
+        private void validateAttachmentOfForwardedMail(dtoMailMessage dtoMail,Int32 NewMailId)
+        {
+            if (dtoMail.AttachmentsList.Count > 0 && dtoMail.AttachmentsList[0].MailId!= NewMailId)
+            {
+                for (Int32 i = 0; i < dtoMail.AttachmentsList.Count; i++)
+                {
+                    dtoMail.AttachmentsList[i].AttachmentId = 0;
+                    dtoMail.AttachmentsList[i].MailId = NewMailId;
+                    dtoMail.AttachmentsList[i].AttachmentId = mailAttachmentService.SaveAttachment(dtoMail.AttachmentsList[i]);
+                }
 
-        private Int32 validateMailForDraft(dtoMailMessage eMail)
+                fileService.CopyFiles(Convert.ToInt32(dtoMail.AttachmentsList[0].MailId), NewMailId);
+            }
+        }
+
+        private dtoMailMessage validateMailForDraft(dtoMailMessage eMail)
         {
             if (eMail.MailId > 0)
             {
-                return eMail.MailId;
+                return eMail;
             }
 
             return SaveDraft(eMail);
@@ -306,6 +372,8 @@ namespace MailService.Services
                 mail.MailFolder = "DRAFT";
                 mail.EmailStatus = "DRAFT";
                 mail.IsRead = false;
+                mail.FromEmail = mail.FromEmail.Trim();
+                mail.ToEmail = mail.ToEmail.Trim();
             }
             catch (Exception ex)
             {
@@ -323,6 +391,8 @@ namespace MailService.Services
                 mailMessage.EmailStatus = "RECEIVED";
                 mailMessage.MailFolder = "INBOX";
                 mailMessage.IsRead = false;
+                mailMessage.FromEmail = mailMessage.FromEmail.Trim();
+                mailMessage.ToEmail = mailMessage.ToEmail.Trim();
             }
             catch (Exception ex)
             {
@@ -339,6 +409,8 @@ namespace MailService.Services
                 mailMessage.EmailStatus = "SENT";
                 mailMessage.MailFolder = "SENT";
                 mailMessage.IsRead = false;
+                mailMessage.FromEmail = mailMessage.FromEmail.Trim();
+                mailMessage.ToEmail = mailMessage.ToEmail.Trim();
             }
             catch (Exception ex)
             {

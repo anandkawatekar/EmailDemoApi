@@ -10,7 +10,7 @@ namespace MailService.Models
         public dtoMailAttachment()
         { }
 
-        public int AttachmentId { get; set; }
+        public Int32 AttachmentId { get; set; }
         public Nullable<int> MailId { get; set; }
         public string Attachment { get; set; }
     }

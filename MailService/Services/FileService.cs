@@ -61,7 +61,7 @@ namespace MailService.Services
                     try
                     {
                         string newPath = Path.Combine(filePath, attch.MailId.ToString());
-                        string fileToDelete = Path.Combine(filePath, attch.Attachment);
+                        string fileToDelete = Path.Combine(newPath, attch.Attachment);
                         File.Delete(fileToDelete);
                     }
                     catch (Exception ee)
