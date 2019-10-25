@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Schema Namespace="MailManagerModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+  <EntityContainer Name="MailManagerDBConnection" annotation:LazyLoadingEnabled="true">
+    <EntitySet Name="MailAttachments" EntityType="MailManagerModel.MailAttachment" />
+    <EntitySet Name="UserAccounts" EntityType="MailManagerModel.UserAccount" />
+    <EntitySet Name="Mails" EntityType="MailManagerModel.Mail" />
+  </EntityContainer>
+  <EntityType Name="MailAttachment">
+    <Key>
+      <PropertyRef Name="AttachmentId" />
+    </Key>
+    <Property Name="AttachmentId" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="MailId" Type="Int32" />
+    <Property Name="Attachment" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+  </EntityType>
+  <EntityType Name="UserAccount">
+    <Key>
+      <PropertyRef Name="UserId" />
+    </Key>
+    <Property Name="UserId" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="FirstName" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+    <Property Name="LastName" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+    <Property Name="EmailId" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+    <Property Name="Password" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+    <Property Name="CreatedDate" Type="DateTime" Precision="3" />
+  </EntityType>
+  <EntityType Name="Mail">
+    <Key>
+      <PropertyRef Name="MailId" />
+    </Key>
+    <Property Name="MailId" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="MailDate" Type="DateTime" Precision="3" />
+    <Property Name="FromEmail" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+    <Property Name="ToEmail" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+    <Property Name="Subject" Type="String" MaxLength="250" FixedLength="false" Unicode="false" />
+    <Property Name="Message" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+    <Property Name="IsAttachmentPresent" Type="Boolean" />
+    <Property Name="EmailStatus" Type="String" MaxLength="10" FixedLength="false" Unicode="false" />
+    <Property Name="MailFolder" Type="String" MaxLength="10" FixedLength="false" Unicode="false" />
+    <Property Name="IsRead" Type="Boolean" />
+  </EntityType>
+</Schema>

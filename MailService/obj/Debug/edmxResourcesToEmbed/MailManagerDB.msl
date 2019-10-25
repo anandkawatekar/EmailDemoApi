@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+  <EntityContainerMapping StorageEntityContainer="MailManagerModelStoreContainer" CdmEntityContainer="MailManagerDBConnection">
+    <EntitySetMapping Name="MailAttachments">
+      <EntityTypeMapping TypeName="MailManagerModel.MailAttachment">
+        <MappingFragment StoreEntitySet="MailAttachments">
+          <ScalarProperty Name="Attachment" ColumnName="Attachment" />
+          <ScalarProperty Name="MailId" ColumnName="MailId" />
+          <ScalarProperty Name="AttachmentId" ColumnName="AttachmentId" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="UserAccounts">
+      <EntityTypeMapping TypeName="MailManagerModel.UserAccount">
+        <MappingFragment StoreEntitySet="UserAccounts">
+          <ScalarProperty Name="CreatedDate" ColumnName="CreatedDate" />
+          <ScalarProperty Name="Password" ColumnName="Password" />
+          <ScalarProperty Name="EmailId" ColumnName="EmailId" />
+          <ScalarProperty Name="LastName" ColumnName="LastName" />
+          <ScalarProperty Name="FirstName" ColumnName="FirstName" />
+          <ScalarProperty Name="UserId" ColumnName="UserId" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="Mails">
+      <EntityTypeMapping TypeName="MailManagerModel.Mail">
+        <MappingFragment StoreEntitySet="Mails">
+          <ScalarProperty Name="IsRead" ColumnName="IsRead" />
+          <ScalarProperty Name="MailFolder" ColumnName="MailFolder" />
+          <ScalarProperty Name="EmailStatus" ColumnName="EmailStatus" />
+          <ScalarProperty Name="IsAttachmentPresent" ColumnName="IsAttachmentPresent" />
+          <ScalarProperty Name="Message" ColumnName="Message" />
+          <ScalarProperty Name="Subject" ColumnName="Subject" />
+          <ScalarProperty Name="ToEmail" ColumnName="ToEmail" />
+          <ScalarProperty Name="FromEmail" ColumnName="FromEmail" />
+          <ScalarProperty Name="MailDate" ColumnName="MailDate" />
+          <ScalarProperty Name="MailId" ColumnName="MailId" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+  </EntityContainerMapping>
+</Mapping>
